@@ -40,7 +40,7 @@ Note -- given that only sponsors present in legislature 13 (the current one) ha
 - `constituency` -- constituency (as number or text; stored as character)
 - `nyears` -- seniority (multiple of term length, 4 years)
 - `committees` -- semicolon-separated committee memberships
-- `photo` -- photo URL (legislature 123 only)
+- `photo` -- photo URL (legislature 13 only)
 - `sex` -- gender (F/M), imputed from first names
 
 Note -- committees are stored either as full text or as acronyms.
