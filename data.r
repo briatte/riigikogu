@@ -301,6 +301,9 @@ if (!file.exists(sponsors)) {
     if (!file.exists(f)) {
       download.file(paste0(r, p), f, mode = "wb", quiet = TRUE)
     }
+    if (file.exists(f)) {
+      p = f
+    }
 
     # party
     f = html_nodes(h, ".profile-desc a") %>% html_attr("href")

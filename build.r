@@ -140,7 +140,7 @@ for (ii in 11:13) {
 
   if (plot) {
 
-    save_plot(n, paste0("plots/net_ee", substr(years[ as.character(ii) ], 1, 4)),
+    save_plot(n, paste0("plots/net_ee", years[ as.character(ii) ]),
               i = colors[ sp[ n %e% "source", "party" ] ],
               j = colors[ sp[ n %e% "target", "party" ] ],
               mode, colors)
