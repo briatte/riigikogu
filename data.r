@@ -423,6 +423,26 @@ if (!file.exists(sponsors)) {
 
 s = read.csv(sponsors, stringsAsFactors = FALSE)
 
+# convert committees to their l. 13 names (drops a few unknown "MAK" values, l. 12)
+s$committees = sapply(s$committees, function(x) {
+  x = strsplit(x, ";") %>% unlist
+  x[ x %in% c("ELAK", "ELK", "euroopa liidu asjade komisjon") ] = "euroopa-liidu-asjade-komisjon"
+  x[ x == "KKK" | x == "keskkonnakomisjon" ] = "keskkonnakomisjon"
+  x[ x == "KK" | x == "kultuurikomisjon" ] = "kultuurikomisjon"
+  x[ x == "MEK" | x == "maaelukomisjon" ] = "maaelukomisjon"
+  x[ x == "MK" | x == "majanduskomisjon" ] = "majanduskomisjon"
+  x[ x == "PSK" | x == "põhiseaduskomisjon" ] = "pohiseaduskomisjon"
+  x[ x == "RK" | x == "rahanduskomisjon" ] = "rahanduskomisjon"
+  x[ x == "RKK" | x == "riigikaitsekomisjon" ] = "riigikaitsekomisjon"
+  x[ x == "SK" | x == "sotsiaalkomisjon" ] = "sotsiaalkomisjon"
+  x[ x == "VK" | x == "väliskomisjon" ] = "valiskomisjon"
+  x[ x %in% c("ÕK", "ÕIK", "õiguskomisjon") ] = "oiguskomisjon"
+  x[ x == "KSK" | x == "korruptsioonivastase seaduse kohaldamise erikomisjon" ] = "korruptsioonivastane-erikomisjon"
+  x[ x %in% c("RRK", "riigieelarve kontrolli erikomisjon", "riigieelarve kontrolli komisjon") ] = "riigieelarve-kontrolli-erikomisjon"
+  x[ x %in% c("JJK", "julgeolekuasutuste järelevalve erikomisjon", "julgeolekuasutuste järelevalve komisjon") ] = "julgeolekuasutuste-jarelevalve-erikomisjon"
+  paste(unique(x[ grepl("komisjon", x)]), collapse = ";")
+})
+
 # ==============================================================================
 # CHECK CONSTITUENCIES
 # ==============================================================================
