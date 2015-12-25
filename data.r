@@ -125,8 +125,7 @@ if (!file.exists(sponsors)) {
 
   f = "raw/mp-11.html"
   if (!file.exists(f)) {
-    download.file(paste0(r, "/tutvustus-ja-ajalugu/riigikogu-ajalugu/xi-riigikogu-koosseis/juhatus-ja-liikmed/"),
-                  f, mode = "wb", quiet = TRUE)
+    download.file(paste0(r, "/tutvustus-ja-ajalugu/riigikogu-ajalugu/xi-riigikogu-koosseis/juhatus-ja-liikmed/"), f, mode = "wb", quiet = TRUE)
   }
   t = read_html(f) %>%
     html_nodes("#main.group.page table") %>%
@@ -183,11 +182,15 @@ if (!file.exists(sponsors)) {
     photo = NA,
     url = NA
   )
-
   # few missing d.o.b.
   s$born[ s$name == "Robert Antropov" ] = 1965
   s$born[ s$name == "Mihkel Juhkami" ] = 1963 # from Googling
   s$born[ s$name == "Georg Pelisaar" ] = 1958
+
+  # alt. for Vilja Savisaar (WP-ET)
+  s$constituency[ s$name == "Georg Pelisaar" ] = 1
+  # replaced Margus Lepik (WP-ET)
+  s$constituency[ s$name == "Terje Trei" ] = 11
 
   #
   # download all sponsors from l. 12
@@ -210,9 +213,9 @@ if (!file.exists(sponsors)) {
   p = str_replace(n, "(.*?)\\((.*?)\\)(.*)", "\\2")
 
   # manual corrections
-  p[ grepl("^Etti Kagarov", n) ] = "SDE"
-  p[ grepl("^Mihhail Lotman", n) ] = "IRL" # Echo Kreisman, substitute
-  p[ grepl("^Jaanus Rahumägi", n) ] = "RE" # Lokk-Tramberg, substitute
+  p[ grepl("^Etti Kagarov", n) ] = "SDE"   # alt. for Jevgeni Ossinovksi
+  p[ grepl("^Mihhail Lotman", n) ] = "IRL" # alt. for Kaja Kreisman
+  p[ grepl("^Jaanus Rahumägi", n) ] = "RE" # alt. for Lokk-Tramberg
   # n[ str_detect(p, "[a-z]") ]
   # table(p, exclude = NULL)
   p[ p == "KESK" ] = "K"
@@ -257,6 +260,17 @@ if (!file.exists(sponsors)) {
   s$born[ s$name == "Aivar Rosenberg" ] = 1962
   s$born[ s$name == "Vilja Savisaar-Toomast" ] = 1962
   s$born[ s$name == "Einar Vallbaum" ] = 1959
+
+  # alt. for Tõnis Lukas (10), later replaced by Kaja Kreisman (7)
+  s$constituency[ s$name == "Mihhail Lotman" & s$legislature == 12 ] = 10
+  # replaced by Tiina Lokk-Tramberg
+  s$constituency[ s$name == "Jaanus Rahumägi" & s$legislature == 12 ] = 1
+  # alt. for Kristen Michal (2), later replaced by Maret Maripuu (3)
+  s$constituency[ s$name == "Ülle Rajasalu" & s$legislature == 12 ] = 2
+  # alt. for Yana Toom (?), later replaced by Valeri Korb (7)
+  s$constituency[ s$name == "Vilja Savisaar-Toomast" & s$legislature == 12 ] = 7
+  # alt. for Hanno Pevkur (6), later replaced by Paul-Eerik Rummo (6)
+  s$constituency[ s$name == "Einar Vallbaum" & s$legislature == 12 ] = 6
 
   #
   # check sponsor links for l. 13
@@ -350,6 +364,30 @@ if (!file.exists(sponsors)) {
   s$party[ s$party == "eesti-reformierakonna-fraktsioon" ] = "RE"
   s$party[ s$party == "isamaa-ja-res-publica-liidu-fraktsioon" ] = "IRL"
 
+  # match constituencies of l. 13 to those of l. 11-12
+  s$constituency[ s$constituency == "Tallinna Haabersti, Põhja-Tallinna ja Kristiine linnaosa" ] = "1"
+  s$constituency[ s$constituency == "Tallinna Kesklinna, Lasnamäe ja Pirita linnaosa" ] = "2"
+  s$constituency[ s$constituency == "Tallinna Mustamäe ja Nõmme linnaosa" ] = "3"
+  s$constituency[ s$constituency == "Harju- ja Raplamaa" ] = "4"
+  s$constituency[ s$constituency == "Hiiu-, Lääne- ja Saaremaa" ] = "5"
+  s$constituency[ s$constituency == "Lääne-Virumaa" ] = "6"
+  s$constituency[ s$constituency == "Ida-Virumaa" ] = "7"
+  s$constituency[ s$constituency == "Järva- ja Viljandimaa" ] = "8"
+  s$constituency[ s$constituency == "Jõgeva- ja Tartumaa" ] = "9"
+  s$constituency[ s$constituency == "Tartu linn" ] = "10"
+  s$constituency[ s$constituency == "Võru-, Valga- ja Põlvamaa" ] = "11"
+  s$constituency[ s$constituency == "Pärnumaa" ] = "12"
+  s$constituency = paste0("Valimisringkond_nr_", s$constituency) # map to WP-ET entries
+
+  # convert birth years
+  s$born = as.integer(s$born)
+
+  # convert seniority
+  s$nyears = as.integer(s$nyears)
+
+  # fix party abbreviation for Terje Trei (l. 11) and Kalmer Lain (l. 12)
+  s$party[ s$party == "REF" ] = "RE"
+
   # sponsor genders (imputed from first names)
   s$sex = sapply(s$name, strsplit, "\\s") %>% sapply(function(x) x[[1]])
   s$sex[ s$sex %in% c("Aadu", "Aare", "Ain", "Aivar", "Aleksei", "Andre", "Andrei", "Andres",
@@ -384,3 +422,46 @@ if (!file.exists(sponsors)) {
 }
 
 s = read.csv(sponsors, stringsAsFactors = FALSE)
+
+# ==============================================================================
+# CHECK CONSTITUENCIES
+# ==============================================================================
+
+cat("Checking constituencies,", sum(is.na(s$constituency)), "missing...\n")
+for (i in na.omit(unique(s$constituency))) {
+
+  g = GET(paste0("https://", meta[ "lang"], ".wikipedia.org/wiki/", i))
+
+  if (status_code(g) != 200)
+    cat("Missing Wikipedia entry:", i, "\n")
+
+  g = xpathSApply(htmlParse(g), "//title", xmlValue)
+  g = gsub("(.*) - Vikipeedia(.*)", "\\1", g)
+
+  if (gsub("\\s", "_", g) != i)
+    cat("Discrepancy:", g, "(WP) !=", i ,"(data)\n")
+
+}
+
+# ============================================================================
+# QUALITY CONTROL
+# ============================================================================
+
+# - might be missing: born (int of length 4), constituency (chr),
+#   photo (chr, folder/file.ext)
+# - never missing: sex (chr, F/M), nyears (int), url (chr, URL),
+#   party (chr, mapped to colors)
+
+cat("Missing", sum(is.na(s$born)), "years of birth\n")
+stopifnot(is.integer(s$born) & nchar(s$born) == 4 | is.na(s$born))
+
+cat("Missing", sum(is.na(s$constituency)), "constituencies\n")
+stopifnot(is.character(s$constituency))
+
+cat("Missing", sum(is.na(s$photo)), "photos\n")
+stopifnot(is.character(s$photo) & grepl("^photos(_\\w{2})?/(.*)\\.\\w{3}", s$photo) | is.na(s$photo))
+
+stopifnot(!is.na(s$sex) & s$sex %in% c("F", "M"))
+stopifnot(!is.na(s$nyears) & is.integer(s$nyears))
+# stopifnot(!is.na(s$url) & grepl("^http(s)?://(.*)", s$url)) # l. 13 only
+stopifnot(s$party %in% names(colors))

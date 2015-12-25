@@ -35,12 +35,12 @@ Note -- given that only sponsors present in legislature 13 (the current one) ha
 
 - `legislature` -- legislature of activity
 - `name` -- full name
-- `born` -- year of birth (stored as character)
+- `born` -- year of birth (int)
 - `party` -- political party (abbreviated)
-- `constituency` -- constituency (as number or text; stored as character)
+- `constituency` -- constituency (using generic names)
 - `nyears` -- seniority (multiple of term length, 4 years)
 - `committees` -- semicolon-separated committee memberships
 - `photo` -- photo URL (legislature 13 only)
 - `sex` -- gender (F/M), imputed from first names
 
-Note -- committees are stored either as full text or as acronyms.
+Note -- committees are stored either as acronyms or as full committee names.
